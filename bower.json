@@ -1,0 +1,21 @@
+{
+  "name": "cg",
+  "authors": [
+    "Pedro Eusebio <pedrosantos95@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

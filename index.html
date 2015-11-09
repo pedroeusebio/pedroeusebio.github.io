@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+    <title>Hello Web - Processing.js Test</title>
+    <script src="bower_components/Processing.js/processing.js"></script>
+  </head>
+  <body>
+  <style type="text/css">
+  canvas {
+  	 padding: 0;
+    margin: auto;
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  </style>
+	<script type="text/processing" data-processing-target="pjs">
+		var a = Array(100,100);
+    	var b = Array(100,150);
+    	var c = Array(110,110);
+    	var d = Array(110,150);
+    	int DONT_INTERSECT = 0;
+		int COLLINEAR = 1;
+		int DO_INTERSECT = 2;
+
+		float x =0, y=0;
+
+    	var locked = Array(false,99);
+    	var bover = Array(false,false,false,false);
+
+		void setup() {
+    		size(500, 500);
+    		background(100);
+    		stroke(255);
+    		var a = Array(100,100);
+    		var b = Array(100,150);
+    		createLine(a,b);
+    		println('hello web!');
+  		}
+  		void draw(){
+  			background(100);
+			int intersected;
+  			createLine(a,b);
+  			createLine(c,d);
+  			intersected = intersect(a,b,c,d);
+  			if (intersected == DO_INTERSECT) ellipse(x, y, 5, 5);
+  		}
+  		void mousePressed(){
+  			distA = distance(a);
+  			distB = distance(b);
+  			distC = distance(c);
+  			distD = distance(d);
+  			if(distA <= 7){
+  				bover = Array(true,false,false,false);
+  			} else if(distB <= 7){
+  				bover = Array(false,true,false,false);
+  			}else if(distC <= 7){
+  				bover = Array(false,false,true,false);
+  			}else if(distD <= 7){
+  				bover = Array(false,false,false,true);
+  			}else {
+  				bover = Array(false,false,false,false);
+  			}
+
+  			for(var i = 0; i < bover.length; i++){
+  				if(!locked[0]){
+  					if(bover[i]){
+  						locked[0] = true;
+  						locked[1] = i;
+  					}else{
+  						locked[0] = false;
+  						locked[1] = 99;
+  					}
+  				}
+  			}
+  		}
+  		void mouseDragged(){
+  			if(locked[1] == 0){
+  				a = Array(mouseX,mouseY);
+  			} else if(locked[1] == 1){
+  				b = Array(mouseX,mouseY);
+  			}else if(locked[1] == 2){
+  				c = Array(mouseX,mouseY);
+  			}else if(locked[1] == 3){
+  				d = Array(mouseX,mouseY);
+  			}
+  			redraw();
+  		}
+  		void mouseReleased(){
+  			locked[0] = false;
+  			locked[1] = 99;
+  			bover = Array(false,false,false,false);
+  		}
+  		function createLine(a,b){
+  			var Ax = a[0],
+  			Ay = a[1],
+  			Bx = b[0],
+  			By = b[1];
+  			ellipse(a[0],a[1],5,5);
+  			ellipse(b[0],b[1],5,5);
+  			line(a[0],a[1],b[0],b[1]);
+  		}
+  		function distance(point){
+  			var dist = Math.sqrt(Math.pow(point[0] - mouseX,2) + Math.pow(point[1] - mouseY,2));
+  			return dist;
+  		}
+
+  		function intersect(a,b,c,d){
+  			float a1 ,a2,b1,b2,c1,c2;
+  			float r1,r2,r3,r4;
+  			float denom, offset,num;
+
+  			a1 = b[1] - a[1];
+  			b1 = a[0] - b[0];
+  			c1 = (b[0] * a[1]) - (a[0] * b[1]);
+
+  			r3 = ((a1 * c[0])+ (b1 * c[1]) + c1);
+  			r4 = ((a1 * d[0]) + (b1 * d[1]) + c1);
+
+  			if ((r3 != 0) && (r4 != 0) && same_sign(r3, r4)){
+   				return DONT_INTERSECT;
+  			}
+  			a2 = d[1] - c[1];
+			b2 = c[0] - d[0];
+			c2 = (d[0] * c[1]) - (c[0] * d[1]);
+
+			r1 = (a2 * a[0]) + (b2 * a[1]) + c2;
+			r2 = (a2 * b[0]) + (b2 * b[1]) + c2;
+
+			if ((r1 != 0) && (r2 != 0) && (same_sign(r1, r2))){
+				return DONT_INTERSECT;
+			}
+
+			denom = (a1 * b2) - (a2 * b1);
+
+			if (denom == 0) {
+    			return COLLINEAR;
+			}
+			if (denom < 0){ 
+    			offset = -denom / 2; 
+			}else {
+    			offset = denom / 2 ;
+			}
+
+			num = (b1 * c2) - (b2 * c1);
+			if (num < 0){
+				x = (num - offset) / denom;
+			}else {
+				x = (num + offset) / denom;
+			}
+
+			num = (a2 * c1) - (a1 * c2);
+			if (num < 0){
+				y = ( num - offset) / denom;
+			}else {
+				y = (num + offset) / denom;
+			}
+
+			return DO_INTERSECT;
+  		}
+
+  		boolean same_sign(float a, float b){
+			return (( a * b) >= 0);
+		}
+
+
+	</script>
+	<canvas id="pjs"> </canvas>
+ </body>
+ </html>
