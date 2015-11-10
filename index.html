@@ -46,7 +46,10 @@
   			createLine(a,b);
   			createLine(c,d);
   			intersected = intersect(a,b,c,d);
-  			if (intersected == DO_INTERSECT) ellipse(x, y, 5, 5);
+  			if (intersected == DO_INTERSECT){
+                fill(#ff0000);
+                ellipse(x, y, 5, 5);
+                }
   		}
   		void mousePressed(){
   			distA = distance(a);
@@ -99,8 +102,10 @@
   			Ay = a[1],
   			Bx = b[0],
   			By = b[1];
+            fill(#ffff00);
   			ellipse(a[0],a[1],5,5);
   			ellipse(b[0],b[1],5,5);
+            stroke(#000000);
   			line(a[0],a[1],b[0],b[1]);
   		}
   		function distance(point){
