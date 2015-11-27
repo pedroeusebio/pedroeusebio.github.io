@@ -10,7 +10,8 @@
   </head>
   <body>
     <script src="../three.js"></script>
-    <script>
+    <script src="OrbitControls.js"></script>
+    <script>      
       var width = window.innerWidth;
       var height =  window.innerHeight;
       var scene = new THREE.Scene();
@@ -23,7 +24,9 @@
       
       var render = function () {
         requestAnimationFrame( render );
+        
         renderer.render(scene, camera);
+        controls.update();
       };
       
        function createCube (){
@@ -50,6 +53,7 @@
          
          console.log(cube.position);
        }
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
       renderer.domElement.addEventListener("click", createCube);
       render();
     </script>
