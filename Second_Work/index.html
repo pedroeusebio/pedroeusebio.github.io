@@ -13,13 +13,6 @@
     <script src="OrbitControls.js"></script>
     <script>
       
-      var ArrayColor = new Array("0xfff68f", "0x4099ff", "0xff7373", "0xafeeee", "0xec84b7", "0x786bbd" );
-      function getRandomColor(){
-        var length = ArrayColor.length;
-        var number = Math.floor(Math.random() * length);
-        console.log(number);
-        return ArrayColor[number];
-      }
       var width = window.innerWidth;
       var height =  window.innerHeight;
       var scene = new THREE.Scene();
@@ -34,7 +27,7 @@
       
       
       controls = new THREE.OrbitControls(camera, renderer.domElement);
-      renderer.domElement.addEventListener("click", createCube);
+      renderer.domElement.addEventListener("contextmenu", createCube);
       
       
       var render = function () {
