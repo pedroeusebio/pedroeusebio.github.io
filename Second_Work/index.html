@@ -11,16 +11,31 @@
   <body>
     <script src="../three.js"></script>
     <script src="OrbitControls.js"></script>
-    <script>      
+    <script>
+      
+      var ArrayColor = new Array("0xfff68f", "0x4099ff", "0xff7373", "0xafeeee", "0xec84b7", "0x786bbd" );
+      function getRandomColor(){
+        var length = ArrayColor.length;
+        var number = Math.floor(Math.random() * length);
+        console.log(number);
+        return ArrayColor[number];
+      }
       var width = window.innerWidth;
       var height =  window.innerHeight;
       var scene = new THREE.Scene();
+      var color = new THREE.Color(1,1,1);
       var camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
       var renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0xeeeeee);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
       camera.position.z = 500;
       camera.zoom = 5;
+      
+      
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      renderer.domElement.addEventListener("click", createCube);
+      
       
       var render = function () {
         requestAnimationFrame( render );
@@ -33,29 +48,26 @@
          var event = window.event;
          var x = event.clientX;
          var y = event.clientY;
-         console.log(width);
-         var geometry = new THREE.BoxGeometry(100,100,100);
-         var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-         var cube = new THREE.Mesh( geometry, material );
          
+         var geometry = new THREE.BoxGeometry(100,100,100);
+         var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+         var cube = new THREE.Mesh( geometry, material );
+         //cube.material.color.setHex(getRandomColor());
          var vector = new THREE.Vector3();
          vector.set((x/width)*2 -1,-(y/height)*2 +1, 0);
          vector.unproject( camera );
          var dir = vector.sub(camera.position).normalize();
          var distance = - camera.position.z/dir.z;
          var pos = camera.position.clone().add(dir.multiplyScalar(distance));
-         console.log(vector);
-         console.log(pos);
+         
          
          cube.position.set(pos.x,pos.y,pos.z);
          scene.add( cube );
          
          
-         console.log(cube.position);
+        
        }
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      renderer.domElement.addEventListener("click", createCube);
-      render();
+     render();
     </script>
   </body>
 </html>
