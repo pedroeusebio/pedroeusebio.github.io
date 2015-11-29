@@ -16,10 +16,12 @@
       var width, height;
       var mouse = new THREE.Vector2(), INTERSECTED;
       var intersects;
+      var transperanceCube;
       init();
       render();
       
       function init(){
+        //initializing scene
         width = window.innerWidth;
         height =  window.innerHeight;
         scene = new THREE.Scene();
@@ -31,18 +33,26 @@
         camera.position.z = 500;
         camera.zoom = 5;
         
+        //adding light to the scene
         var light = new THREE.DirectionalLight( 0xffffff, 1 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
-
+        
+        //creating a raycaster
         raycaster = new THREE.Raycaster();
         
         
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
         
-        
-        renderer.domElement.addEventListener("click", createCube);
+        //adding listener for events
+        renderer.domElement.addEventListener("contextmenu", createCube);
         document.addEventListener( 'mousemove', OnmouseMove, false );
+        document.addEventListener('click',OncubeClick,false);
+        /*document.addEventListener('mousedown',OnDragCube,false);*/
+        
+        //creating a orbit controler for the renderer
+        controls = new THREE.OrbitControls(this.camera);
+        this.controls.target = new THREE.Vector3(0, 0, 0);
+
       
       }
       function render() {
@@ -53,53 +63,70 @@
         raycaster.setFromCamera(mouse,camera);
         
         intersects = raycaster.intersectObjects(scene.children);
-        console.log(intersects.length);
-        if (intersects.length > 0 ){
-          if (INTERSECTED != intersects[0].object){
-            if (INTERSECTED) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 
-						INTERSECTED = intersects[ 0 ].object;
-						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex( 0xff0000 );
-
-					}
-
-				} else {
-
-					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-
-					INTERSECTED = null;
-
-				}
         renderer.render(scene, camera);
         controls.update();
       }
       
       function createCube (){
         if (intersects.length > 0 ) return 0;
-        
-         var event = window.event;
-         var x = event.clientX;
-         var y = event.clientY;
+        var event = window.event;
+        event.preventDefault();
+        var x = event.clientX;
+        var y = event.clientY;
          
-         var geometry = new THREE.BoxGeometry(100,100,100);
-         var material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff });
-         var cube = new THREE.Mesh( geometry, material );
-         var vector = new THREE.Vector3();
-         vector.set((x/width)*2 -1,-(y/height)*2 +1, 0);
-         vector.unproject( camera );
-         var dir = vector.sub(camera.position).normalize();
-         var distance = - camera.position.z/dir.z;
-         var pos = camera.position.clone().add(dir.multiplyScalar(distance));
+        var geometry = new THREE.BoxGeometry(100,100,100,1,1);
+        var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+        var cube = new THREE.Mesh( geometry, material );
+        var vector = new THREE.Vector3();
+        vector.set((x/width)*2 -1,-(y/height)*2 +1, 0);
+        vector.unproject( camera );
+        var dir = vector.sub(camera.position).normalize();
+        var distance = - camera.position.z/dir.z;
+        var pos = camera.position.clone().add(dir.multiplyScalar(distance));
          
          
-         cube.position.set(pos.x,pos.y,pos.z);
-         scene.add( cube );
+        cube.position.set(pos.x,pos.y,pos.z);
+        scene.add( cube );
+         
        }
+      
       function OnmouseMove( event ){
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = - (event.clientY/window.innerHeight) * 2 + 1; 
       }
+      
+      function OncubeClick( event ){
+        scene.remove(transperanceCube);
+        if(scene.getObjectByName("selected")) scene.getObjectByName("selected").name = "";
+        if(intersects.length > 0 ){
+          var cube = intersects[0].object;
+          cube.name = "selected";
+          transperanceCube = new THREE.Mesh( new THREE.BoxGeometry(105,105,105,1,1), new THREE.MeshLambertMaterial({color : 0xffffff, transparent :true, opacity: 0.4}));
+          transperanceCube.name = "selector";
+          scene.add(transperanceCube);
+          transperanceCube.position.set(cube.position.x, cube.position.y, cube.position.z);
+        }
+      }
+      
+      /*function OnDragCube( event ){
+        event.preventDefault();
+        if (event.keyCode === 77){
+          if (intersects.length > 0  && scene.getObjectByName("selected")){
+            console.log("ok");
+            scene.remove(transperanceCube);
+            var selected = scene.getObjectByName("selected");
+            var vector = new THREE.Vector3();
+            vector.set(mouse.x,mouse.y, 0);
+            vector.unproject( camera );
+            var dir = vector.sub(camera.position).normalize();
+            var distance = - camera.position.z/dir.z;
+            var pos = camera.position.clone().add(dir.multiplyScalar(distance));
+            selected.translate(vector.x,vector.y,vector.z);
+            
+          }
+        }
+      }*/
       
     </script>
   </body>
