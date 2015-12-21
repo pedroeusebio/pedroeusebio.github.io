@@ -212,6 +212,10 @@
       }
 
       function RotateCube (event) {
+        scene.remove(transperanceCube);
+        
+        if(scene.getObjectByName("selected")) scene.getObjectByName("selected").name = "";
+        
         if (event.keyCode == "114" && !rotation){
           rotation = true;
           console.log(rotation);
