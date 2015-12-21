@@ -13,10 +13,12 @@
     <script src="Second_Work/OrbitControls.js"></script>
     <script>
       var camera, scene, renderer, raycaster, plane;
-      var width, height;
+      var width, height, rotation;
       var mouse = new THREE.Vector2(), INTERSECTED;
       var intersects;
       var transperanceCube;
+      var previousMousePosition = {x:0, y:0};
+      var deltaMove, isDragging;
       var selection;
       var offset = new THREE.Vector3();
       init();
@@ -27,13 +29,14 @@
         width = window.innerWidth;
         height =  window.innerHeight;
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+        //camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+        camera = new THREE.PerspectiveCamera(45, width/height,1,10000);
         camera.lookAt(new THREE.Vector3(0,0,0));
         renderer = new THREE.WebGLRenderer();
         renderer.setClearColor(0xeeeeee);
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
-        camera.position.z = 500;
+        camera.position.z = 1000;
         camera.zoom = 5;
         
         //adding light to the scene
@@ -45,20 +48,24 @@
         raycaster = new THREE.Raycaster();
         
         //adding listener for events
-        renderer.domElement.addEventListener("contextmenu", createCube);
+        //renderer.domElement.addEventListener("keypress", createCube);
+        document.addEventListener('keypress', CreateCube, false);
         document.addEventListener( 'mousemove', OnmouseMove, false );
         document.addEventListener('click',OncubeClick,false);
         document.addEventListener('mousedown',OnDragCube,false);
         document.addEventListener('mouseup',OnRealizeCube,false);
-        
+        document.addEventListener('keypress', DeleteCube ,false);
+        document.addEventListener('keypress', RotateCube ,false);
+
         //creating a orbit controler for the renderer
         controls = new THREE.OrbitControls(this.camera);
         this.controls.target = new THREE.Vector3(0, 0, 0);
         
         // 
         
-        plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500,0), new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 1}));
+        plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(1000, 1000,8,8), new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0}));
         scene.add(plane);
+        plane.position.set(width,height,0);
         plane.visible = true;
         
 
@@ -78,39 +85,56 @@
         controls.update();
       }
       
-      function createCube (){
-        if (intersects.length > 0 ) return 0;
-        var event = window.event;
-        event.preventDefault();
-        var x = event.clientX;
-        var y = event.clientY;
-         
-        var geometry = new THREE.BoxGeometry(100,100,100,1,1);
-        var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
-        var cube = new THREE.Mesh( geometry, material );
-        var vector = new THREE.Vector3();
-        vector.set((x/width)*2 -1,-(y/height)*2 +1, 0);
-        vector.unproject( camera );
-        var dir = vector.sub(camera.position).normalize();
-        var distance = - camera.position.z/dir.z;
-        var pos = camera.position.clone().add(dir.multiplyScalar(distance));
-         
-         
-        cube.position.set(pos.x,pos.y,pos.z);
-        console.log(pos.z);
-        scene.add( cube );
-         
+      function CreateCube (event){
+        if(event.keyCode == "99") {
+          if (intersects.length > 1 ) return 0;
+          event.preventDefault();
+          var intersection = raycaster.intersectObjects(plane);
+          var geometry = new THREE.BoxGeometry(100,100,100,1,1);
+          var material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+          var cube = new THREE.Mesh( geometry, material );
+          var vector = new THREE.Vector3();
+          vector.set(mouse.x,mouse.y, 0);
+          vector.unproject( camera );
+          var dir = vector.sub(camera.position).normalize();
+          var distance = - camera.position.z/dir.z;
+          var pos = camera.position.clone().add(dir.multiplyScalar(distance));
+           
+           
+          cube.position.set(pos.x,pos.y,pos.z);
+          console.log(pos.z);
+          scene.add( cube );
+        } 
        }
       
-      function OnmouseMove( event ){
+      function OnmouseMove( event ) {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = - (event.clientY/window.innerHeight) * 2 + 1; 
-
+        mouse.y = - (event.clientY/window.innerHeight) * 2 + 1;
+        deltaMove = { x: event.clientX - previousMousePosition.x,
+                      y: event.clientY - previousMousePosition.y}; 
         if(selection){
-          var intersect = raycaster.intersectObject(plane);
-          selection.position.copy(intersect[0].point.sub(offset));
-          scene.getObjectByName("selected").position.copy(selection.position);
-        } /*else {
+          if(!isDragging){
+            var intersect = raycaster.intersectObject(plane);
+            selection.position.copy(intersect[0].point.sub(offset));
+            scene.getObjectByName("selected").position.copy(selection.position);
+          }
+          if(isDragging){ 
+            var deltaRotationQuaternion = new THREE.Quaternion()
+            .setFromEuler(new THREE.Euler(
+                toRadians(deltaMove.y * 1),
+                toRadians(deltaMove.x * 1),
+                0,
+                'XYZ'
+            ));
+            var cube = scene.getObjectByName('selected');
+            cube.quaternion.multiplyQuaternions(deltaRotationQuaternion, cube.quaternion);
+            transperanceCube.rotation.x = cube.rotation.x;
+            transperanceCube.rotation.y = cube.rotation.y;
+            transperanceCube.rotation.z = cube.rotation.z;
+          }
+          previousMousePosition = { x: event.clientX, y: event.clientY};
+        }
+         /*else {
           var intersect = raycaster.intersectObjects(scene.children);
           if (intersect.length > 0 ){
             plane.position.copy(intersect[0].object.position);
@@ -124,12 +148,17 @@
         
         if(scene.getObjectByName("selected")) scene.getObjectByName("selected").name = "";
         
-        if(intersects.length > 0 ){
+        if(intersects.length >= 1 ){
+          controls.enabled = false;
           var cube = intersects[0].object;
           cube.name = "selected";
           transperanceCube = new THREE.Mesh( new THREE.BoxGeometry(110,110,110,1,1), new THREE.MeshLambertMaterial({color : 0xffffff, transparent :true, opacity: 0.4}));
           transperanceCube.name = "selector";
           scene.add(transperanceCube);
+          transperanceCube.rotation.x = cube.rotation.x;
+          transperanceCube.rotation.y = cube.rotation.y;
+          transperanceCube.rotation.z = cube.rotation.z;
+          console.log(transperanceCube.rotation);
           transperanceCube.position.set(cube.position.x, cube.position.y, cube.position.z);
           plane.position.copy(cube.position);
           plane.lookAt(camera.position);
@@ -139,13 +168,26 @@
       
       function OnDragCube( event ){
         event.preventDefault();
-        if (intersects.length >0 ){
+        if (intersects.length >0){
           controls.enabled = false;
-          selection = intersects[0].object;
-          var intersect = raycaster.intersectObject(plane);
-          console.log(intersect);
-          offset.copy(intersect[0].point).sub(plane.position);
-          console.log(selection);
+          if(transperanceCube){
+            console.log("existe");
+            selection = transperanceCube;
+          } else {
+            selection = intersects[0].object;
+          }
+          
+          if (!rotation){
+            console.log("entrei");
+            var intersect = raycaster.intersectObject(plane);
+            if( intersect[0].point){
+              offset.copy(intersect[0].point).sub(plane.position);
+            }
+          }
+          if (rotation) {
+            console.log("entrei2");
+            isDragging = true;
+          }  
         }
       }
       
@@ -154,7 +196,31 @@
         controls.enabled = true;
         selection = null;
         plane.position.set(width,height,0);
+        isDragging = false;
+      }
 
+      function DeleteCube (event) {
+        console.log(event.keyCode);
+        if(event.keyCode == '100'){
+          if(scene.getObjectByName("selected")){
+            console.log("entrei");
+            var cube = scene.getObjectByName("selected");
+            scene.remove(cube);
+            scene.remove(transperanceCube);
+          }
+        }
+      }
+
+      function RotateCube (event) {
+        if (event.keyCode == "114" && !rotation){
+          rotation = true;
+          console.log(rotation);
+        } else if(event.keyCode == "114" && rotation) {
+          rotation = false;
+        }
+      }
+      function toRadians (degrees) {
+        return degrees * (Math.PI/180);
       }
       
     </script>
