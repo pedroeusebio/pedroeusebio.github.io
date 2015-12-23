@@ -4,13 +4,24 @@
     <meta charset=utf-8>
     <title>Space Cubes </title>
     <style>
-      body { margin: 0; }
+      body { margin: 0; background-color: #eeeeee;}
       canvas { width: 100%; height: 100% }
     </style>
   </head>
   <body>
     <script src="three.js"></script>
     <script src="Second_Work/OrbitControls.js"></script>
+    <div style="background-color: #eeeeee; position:absolute; top:10px; width:100%; text-align: center; ">
+       <p style="font-size:8px">
+       Pedro Eusébio</br>
+       Press 'c' to create a cube.</br>
+       Click in a cube to select it.</br>
+       Press 'd' to delete a cube( need to be selected). To unselect, click in the space.</br>
+       To rotate de scene, unselect all cubes , click on the scene and drag.</br>
+       To zoom use the scroll wheel.</br>
+       Press 'r' to turn on/off the rotation mode.</br>
+       </p>
+    </div>
     <script>
       var camera, scene, renderer, raycaster, plane;
       var width, height, rotation;
